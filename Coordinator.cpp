@@ -16,11 +16,19 @@
 
 #include "Coordinator.h"
 
+#if __has_include(<dirent.h>)
 #include <dirent.h>
+#else
+#define USE_PORTED_DIRECT_API
+#include <direct.h>
+#include "getopt_port.h"
+#endif
+
 #include <sys/stat.h>
 
 #include <algorithm>
 #include <iterator>
+#include <filesystem>
 
 #include <android-base/logging.h>
 #include <hidl-hash/Hash.h>
@@ -31,6 +39,53 @@
 #include "AST.h"
 #include "Interface.h"
 #include "hidl-gen_l.h"
+
+#ifdef _MSC_VER
+#include "system_path_finder.h"
+#endif
+
+#ifdef USE_PORTED_DIRECT_API
+
+typedef struct DIR DIR;
+DIR* opendir(const char*);
+int closedir(DIR*);
+struct dirent* readdir(DIR*);
+#if defined( __LP64__ )
+#define __DIRENT64_INO_T ino_t
+#else
+#define __DIRENT64_INO_T uint64_t /* Historical accident. */
+#endif
+
+typedef int mode_t;
+
+#ifndef DT_UNKNOWN
+#define DT_UNKNOWN 0
+#define DT_FIFO 1
+#define DT_CHR 2
+#define DT_DIR 4
+#define DT_BLK 6
+#define DT_REG 8
+#define DT_LNK 10
+#define DT_SOCK 12
+#define DT_WHT 14
+#endif
+
+#define S_ISDIR(m)      (((m)& S_IFMT) == S_IFDIR)
+
+struct dirent
+{
+    __DIRENT64_INO_T d_ino = 0u;
+    uint64_t d_off = 0u;
+    unsigned short d_reclen = 0u;
+    unsigned char d_type = DT_UNKNOWN;
+    char d_name[256];
+};
+
+int mkdir(const char* path, mode_t mode);
+
+int getopt(int argc, char* const argv[], const char* optstring);
+
+#endif
 
 static bool existdir(const char *name) {
     DIR *dir = opendir(name);
@@ -527,7 +582,7 @@ status_t Coordinator::convertPackageRootToPath(const FQName& fqName, std::string
     status_t err = getPackageRoot(fqName, &packageRoot);
     if (err != OK) return err;
 
-    if (*(packageRoot.end()--) != '.') {
+    if (packageRoot.back() != '.') {
         packageRoot += '.';
     }
 
@@ -944,6 +999,31 @@ status_t Coordinator::enforceHashes(const FQName& currentPackage) const {
 }
 
 bool Coordinator::MakeParentHierarchy(const std::string &path) {
+#ifdef _MSC_VER
+    std::filesystem::path file_path(path);
+    std::filesystem::path path_to_make = file_path;
+    if (file_path.has_extension())
+    {
+        path_to_make = file_path.parent_path();
+    }
+
+    auto pos = path.find("BluetoothAudioOffloadAll.cpp");
+    if (pos != std::string::npos)
+    {
+        int x = 0;
+        x += 90;
+    }
+
+    bool already_exist = std::filesystem::exists(path_to_make);
+    if (already_exist)
+    {
+        return already_exist;
+    }
+    else
+    {
+        return std::filesystem::create_directories(path_to_make);
+    }
+#else
     static const mode_t kMode = 0755;
 
     size_t start = 1;  // Ignore leading '/'
@@ -967,7 +1047,7 @@ bool Coordinator::MakeParentHierarchy(const std::string &path) {
 
         start = slashPos + 1;
     }
-
+#endif
     return true;
 }
 
@@ -1052,12 +1132,112 @@ void Coordinator::parseOptions(int argc, char** argv, const std::string& options
     }
 
     if (!suppressDefaultPackagePaths) {
+#ifdef _MSC_VER
+        addDefaultPackagePath("android.hardware", find_system_source_path("android.hardware"));
+        addDefaultPackagePath("android.hidl", find_system_source_path("android.hidl"));
+        addDefaultPackagePath("android.frameworks", find_system_source_path("android.frameworks"));
+        addDefaultPackagePath("android.system", find_system_source_path("android.system"));
+#else
         addDefaultPackagePath("android.hardware", "hardware/interfaces");
         addDefaultPackagePath("android.hidl", "system/libhidl/transport");
         addDefaultPackagePath("android.frameworks", "frameworks/hardware/interfaces");
         addDefaultPackagePath("android.system", "system/hardware/interfaces");
+#endif
     }
 }
 
 }  // namespace android
 
+#ifdef USE_PORTED_DIRECT_API
+
+int mkdir(const char* path, mode_t mode)
+{
+    return _mkdir(path);
+}
+
+struct DIR
+{
+    std::string mDirPath;
+    std::vector< dirent >::size_type mIndex = 0u;
+    std::vector< dirent > mDirectInfo;
+};
+
+DIR* opendir(const char* name)
+{
+    DIR* dir = nullptr;
+    std::filesystem::path path_(name);
+    if (path_.empty())
+    {
+        char* s = nullptr;
+        _get_pgmptr(&s);
+        std::filesystem::path p_(s);
+        p_.remove_filename();
+        path_.swap(p_);
+    }
+    if (!std::filesystem::is_directory(path_))
+    {
+        return dir;
+    }
+
+    dir = new DIR;
+    dir->mDirPath.assign(name);
+
+    for (std::filesystem::directory_iterator beg(path_); beg != std::filesystem::directory_iterator(); ++beg)
+    {
+        dirent dirent_;
+        dirent_.d_type = DT_UNKNOWN;
+        do
+        {
+            if (beg->is_directory())
+            {
+                dirent_.d_type = DT_DIR;
+                break;
+            }
+
+            if (beg->is_fifo())
+            {
+                dirent_.d_type = DT_FIFO;
+                break;
+            }
+
+            if (beg->is_block_file())
+            {
+                dirent_.d_type = DT_BLK;
+                break;
+            }
+        } while (0);
+        if (beg->path().has_filename())
+        {
+            auto pa_ = beg->path();
+            auto file_ = pa_.filename();
+            strcpy_s(dirent_.d_name, 256, file_.generic_string().c_str());
+            dir->mDirectInfo.emplace_back(dirent_);
+        }
+    }
+    return dir;
+}
+
+int closedir(DIR* dir)
+{
+    int result = 0;
+    delete dir;
+    return result;
+}
+
+struct dirent* readdir(DIR* dir)
+{
+    struct dirent* result = nullptr;
+    if (!dir)
+    {
+        return result;
+    }
+
+    if (dir->mIndex < dir->mDirectInfo.size())
+    {
+        result = dir->mDirectInfo.data() + dir->mIndex;
+        dir->mIndex++;
+    }
+    return result;
+}
+
+#endif

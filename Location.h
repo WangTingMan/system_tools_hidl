@@ -31,12 +31,12 @@ namespace android {
 
 struct Position {
     Position() = default;
-    Position(std::string filename, size_t line, size_t column);
+    Position(std::string filename, int64_t line, int64_t column);
 
     const std::string& filename() const;
 
-    size_t line() const;
-    size_t column() const;
+    int64_t line() const;
+    int64_t column() const;
 
     static bool inSameFile(const Position& lhs, const Position& rhs);
 
@@ -46,9 +46,9 @@ struct Position {
     // File name to which this position refers.
     std::string mFilename;
     // Current line number.
-    size_t mLine;
+    int64_t mLine;
     // Current column number.
-    size_t mColumn;
+    int64_t mColumn;
 };
 
 std::ostream& operator<<(std::ostream& ostr, const Position& pos);

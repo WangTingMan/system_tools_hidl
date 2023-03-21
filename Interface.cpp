@@ -25,7 +25,11 @@
 #include "StringType.h"
 #include "VectorType.h"
 
+#ifdef _MSC_VER
+#include <windows.h>
+#else
 #include <unistd.h>
+#endif
 
 #include <iostream>
 #include <memory>
@@ -297,12 +301,44 @@ bool Interface::fillHashChainMethod(Method *method) const {
         hardware::IBinder::HIDL_HASH_CHAIN_TRANSACTION,
         { { IMPL_INTERFACE, [this, digestType](auto &out) {
             std::vector<const Interface *> chain = typeChain();
-            out << "_hidl_cb(";
-            out.block([&] {
-                emitDigestChain(out, "(" + digestType->getInternalDataCppType() + ")", chain,
-                                [](const auto& e) { return e->cppValue(); });
-            });
-            out << ");\n";
+            bool generate_vs_compatible = false;
+#ifdef _MSC_VER
+            if (digestType->countDimensions() == 1)
+            {
+                generate_vs_compatible = true;
+            }
+            else
+            {
+                std::cout << "To do: handle the dimensions greater than 1.";
+            }
+#endif
+            if (generate_vs_compatible)
+            {
+                std::string cpp_stack_type;
+                cpp_stack_type = digestType->getCppType(StorageMode::StorageMode_Stack, true);
+
+                out << "::android::hardware::hidl_vec< ";
+                out << cpp_stack_type << " > ";
+
+                out << "hid_\n";
+
+                out.block([&] {
+                    emitDigestChain(out, digestType->getInternalDataCppArrayType(), chain,
+                        [](const auto& e) { return e->cppValue(); });
+                    });
+                out << ";";
+
+                out << "\n_hidl_cb(hid_);\n";
+            }
+            else
+            {
+                out << "_hidl_cb(";
+                out.block([&] {
+                    emitDigestChain(out, "(" + digestType->getInternalDataCppType() + ")", chain,
+                        [](const auto& e) { return e->cppValue(); });
+                    });
+                out << ");\n";
+            }
             out << "return ::android::hardware::Void();\n";
         } } }, /* cppImpl */
         { { IMPL_INTERFACE, [this, digestType, chainType](auto &out) {

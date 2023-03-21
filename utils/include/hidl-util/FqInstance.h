@@ -70,29 +70,29 @@ class FqInstance {
     // IFoo.Type:MY_ENUM_VALUE
     //
     // If no "/instance", hasInstance() will return false afterwards.
-    __attribute__((warn_unused_result)) bool setTo(const std::string& s);
+    /*__attribute__((warn_unused_result))*/ bool setTo(const std::string& s);
 
     // Convenience method when an FQName and instance are already available.
-    __attribute__((warn_unused_result)) bool setTo(const FQName& fqName,
+    /*__attribute__((warn_unused_result))*/ bool setTo(const FQName& fqName,
                                                    const std::string& instance);
 
     // Convenience method for the following formats:
     // android.hardware.foo@1.0
     // android.hardware.foo@1.0::IFoo
     // android.hardware.foo@1.0::IFoo/default
-    __attribute__((warn_unused_result)) bool setTo(const std::string& package, size_t majorVer,
+    /*__attribute__((warn_unused_result))*/ bool setTo(const std::string& package, size_t majorVer,
                                                    size_t minorVer,
                                                    const std::string& interface = "",
                                                    const std::string& instance = "");
     // Convenience method for the following formats:
     // @1.0::IFoo
     // @1.0::IFoo/default
-    __attribute__((warn_unused_result)) bool setTo(size_t majorVer, size_t minorVer,
+    /*__attribute__((warn_unused_result))*/ bool setTo(size_t majorVer, size_t minorVer,
                                                    const std::string& interface,
                                                    const std::string& instance = "");
     // Convenience method for the following formats:
     // IFoo/default
-    __attribute__((warn_unused_result)) bool setTo(const std::string& interface,
+    /*__attribute__((warn_unused_result))*/ bool setTo(const std::string& interface,
                                                    const std::string& instance);
 
     // Same as creating an FqInstance then call setTo. See setTo for all valid signatures.

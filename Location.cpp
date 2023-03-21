@@ -21,18 +21,18 @@
 
 namespace android {
 
-Position::Position(std::string filename, size_t line, size_t column)
+Position::Position(std::string filename, int64_t line, int64_t column)
     : mFilename(filename), mLine(line), mColumn(column) {}
 
 const std::string& Position::filename() const {
     return mFilename;
 }
 
-size_t Position::line() const {
+int64_t Position::line() const {
     return mLine;
 }
 
-size_t Position::column() const {
+int64_t Position::column() const {
     return mColumn;
 }
 

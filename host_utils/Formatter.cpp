@@ -63,7 +63,7 @@ Formatter& Formatter::indent(const std::function<void(void)>& func) {
 Formatter& Formatter::block(const std::function<void(void)>& func) {
     (*this) << "{\n";
     this->indent(func);
-    return (*this) << "}";
+    return (*this) << "\n}";
 }
 
 void Formatter::pushLinePrefix(const std::string& prefix) {
@@ -165,7 +165,7 @@ void Formatter::printBlock(const WrappedOutput::Block& block, size_t lineLength)
         prefixSize += prefix.size();
     }
 
-    size_t lineStart = mCurrentPosition ?: (getIndentation() + prefixSize);
+    size_t lineStart = mCurrentPosition ? mCurrentPosition : (getIndentation() + prefixSize);
     size_t blockSize = block.computeSize(false);
     if (blockSize + lineStart < lineLength) {
         block.print(*this, false);

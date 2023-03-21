@@ -26,12 +26,21 @@
 #include <hidl-util/StringHelper.h>
 #include <stdio.h>
 #include <sys/stat.h>
+#if __has_include(<unistd.h>)
 #include <unistd.h>
+#else
+#include <windows.h>
+#include <getopt_port.h>
+#endif
 #include <iostream>
 #include <set>
 #include <sstream>
 #include <string>
 #include <vector>
+
+#ifdef _MSC_VER
+#include "InitSetting.h"
+#endif
 
 using namespace android;
 
@@ -1344,6 +1353,8 @@ int main(int argc, char **argv) {
         usage(me);
         exit(1);
     }
+
+    InitSetting(argv[0]);
 
     const OutputHandler* outputFormat = nullptr;
     Coordinator coordinator;

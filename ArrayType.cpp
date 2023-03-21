@@ -129,6 +129,18 @@ std::string ArrayType::getInternalDataCppType() const {
     return result;
 }
 
+std::string ArrayType::getInternalDataCppArrayType() const
+{
+    std::string result("std::array<");
+    result.append(mElementType->getCppStackType());
+    for (size_t i = 0; i < mSizes.size(); ++i) {
+        result += ",";
+        result += mSizes[i]->cppValue();
+        result += ">";
+    }
+    return result;
+}
+
 std::string ArrayType::getJavaType(bool forInitializer) const {
     std::string base =
         mElementType->getJavaType(forInitializer);

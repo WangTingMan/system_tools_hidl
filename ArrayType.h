@@ -54,6 +54,8 @@ struct ArrayType : public Type {
 
     std::string getInternalDataCppType() const;
 
+    std::string getInternalDataCppArrayType() const;
+
     std::string getJavaType(bool forInitializer) const override;
 
     std::string getVtsType() const override;
