@@ -21,9 +21,11 @@
 #include <string>
 #include <vector>
 
+#include <hidl-util/hidl_gen_utils_exports.h>
+
 namespace android {
 
-struct FQName {
+struct LIBHIDLGENUTILS_API FQName {
     /*__attribute__((warn_unused_result))*/ static bool parse(const std::string& s, FQName* into);
 
     explicit FQName();

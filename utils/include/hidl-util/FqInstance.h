@@ -24,6 +24,8 @@
 
 #include <hidl-util/FQName.h>
 
+#include <hidl-util/hidl_gen_utils_exports.h>
+
 namespace android {
 
 // A wrapper around FQName to include instance name as well.
@@ -35,7 +37,7 @@ namespace android {
 //    // error handling
 // }
 // LOG(WARNING) << fqInstance.string();
-class FqInstance {
+class LIBHIDLGENUTILS_API FqInstance {
    public:
     const std::string& getPackage() const;
     size_t getMajorVersion() const;
