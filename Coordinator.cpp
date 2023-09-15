@@ -519,7 +519,7 @@ status_t Coordinator::getPackageInterfaceFiles(
         // filesystems may not support d_type and return DT_UNKNOWN
         if (ent->d_type == DT_UNKNOWN) {
             struct stat sb;
-            const auto filename = packagePath + std::string(ent->d_name);
+            const auto filename = path + std::string(ent->d_name);
             if (stat(filename.c_str(), &sb) == -1) {
                 fprintf(stderr, "ERROR: Could not stat %s\n", filename.c_str());
                 return -errno;
