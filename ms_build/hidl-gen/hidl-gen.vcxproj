@@ -78,7 +78,7 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>$(ProjectDir)..\..\hashing\include;$(ProjectDir)..\..\ms_build\libhidl-gen-ast;$(ProjectDir)..\..\;$(ProjectDir)..\..\host_utils\include;$(ProjectDir);$(ProjectDir)..\..\utils\include;$(SolutionDir)libbase\include;$(SolutionDir)\core\libutils\include;$(SolutionDir)\libhwbinder\include;$(SolutionDir)\system\external\jsoncpp\include;$(SolutionDir)\core\libcutils\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir)..\..\hashing\include;$(ProjectDir)..\..\ms_build\libhidl-gen-ast;$(ProjectDir)..\..\;$(ProjectDir)..\..\host_utils\include;$(ProjectDir);$(ProjectDir)..\..\utils\include;$(SolutionDir)libbase\include;$(SolutionDir)\core\libutils\include;$(SolutionDir)\core\libutils\binder\include;$(SolutionDir)\libhwbinder\include;$(SolutionDir)\system\external\jsoncpp\include;$(SolutionDir)\core\libcutils\include;$(IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)$(Platform)\$(Configuration);$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
